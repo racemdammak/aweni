@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface User {
@@ -7,13 +7,16 @@ interface User {
   email: string;
   accountType: string;
   photo?: string;
+  favorites?: number[];
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  navigateToDashboard: (email: string, name: string, accountType: string) => void;
+  navigateToDashboard: () => void;
   logout: () => void;
+  toggleFavorite: (professionalId: number) => void;
+  isFavorite: (professionalId: number) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,22 +28,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
-  const navigateToDashboard = (email: string, name: string, accountType: string) => {
-    const userId = Date.now().toString(); // Generate unique ID
-    const user = {
-      id: userId,
-      name: name || email.split('@')[0], // Use name if provided, otherwise first part of email
-      email,
-      accountType,
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user');
+    }
+  }, [user]);
+
+  const navigateToDashboard = () => {
+    const newUser = {
+      id: '1',
+      name: 'Test User',
+      email: 'test@example.com',
+      accountType: 'client',
+      favorites: [],
     };
-    setUser(user);
-    localStorage.setItem('user', JSON.stringify(user));
+    setUser(newUser);
     navigate('/dashboard');
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('user');
+  };
+
+  const toggleFavorite = (professionalId: number) => {
+    if (!user) return;
+    
+    setUser(prev => {
+      if (!prev) return null;
+      
+      const favorites = prev.favorites || [];
+      const newFavorites = favorites.includes(professionalId)
+        ? favorites.filter(id => id !== professionalId)
+        : [...favorites, professionalId];
+      
+      const updatedUser = {
+        ...prev,
+        favorites: newFavorites
+      };
+      
+      return updatedUser;
+    });
+  };
+
+  const isFavorite = (professionalId: number) => {
+    return user?.favorites?.includes(professionalId) || false;
   };
 
   return (
@@ -49,7 +82,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user, 
         isAuthenticated: !!user,
         navigateToDashboard,
-        logout
+        logout,
+        toggleFavorite,
+        isFavorite
       }}
     >
       {children}

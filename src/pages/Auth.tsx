@@ -21,7 +21,7 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigateToDashboard(formData.email, formData.name, formData.accountType);
+    navigateToDashboard();
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

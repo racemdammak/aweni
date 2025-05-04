@@ -9,6 +9,7 @@ import MyRequests from './pages/MyRequests';
 import MyProfile from './pages/MyProfile';
 import NotFound from './pages/NotFound';
 import Navbar from './components/Navbar';
+import Favorites from './pages/Favorites';
 
 // Protected Route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -50,6 +51,11 @@ function App() {
             <Route path="/my-profile" element={
               <ProtectedRoute>
                 <><Navbar /><MyProfile /></>
+              </ProtectedRoute>
+            } />
+            <Route path="/favorites" element={
+              <ProtectedRoute>
+                <><Navbar /><Favorites /></>
               </ProtectedRoute>
             } />
             
