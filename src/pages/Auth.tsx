@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { useAuth } from '../lib/auth';
+import { useAuth } from '../contexts/AuthContext';
 import { User, Mail, Lock, Building2, Home, Sparkles, ArrowRight, Loader2, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -88,25 +88,8 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      if (isLogin) {
-        await login(formData.email, formData.password);
-        navigate('/dashboard', { replace: true });
-      } else {
-        await signup(formData.name, formData.email, formData.password, formData.accountType);
-        navigate('/dashboard', { replace: true });
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      setIsLoading(false);
-    }
+    // Immediately navigate to dashboard without any checks
+    navigate('/dashboard', { replace: true });
   };
 
   const getPasswordStrengthColor = () => {

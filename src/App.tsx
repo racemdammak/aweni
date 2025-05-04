@@ -23,43 +23,42 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <div className="min-h-screen bg-gray-50">
-          <Navbar />
           <Routes>
             {/* Public routes */}
-            <Route path="/" element={<Home />} />
-            <Route path="/auth" element={<Auth />} />
+            <Route path="/" element={<><Navbar /><Home /></>} />
+            <Route path="/auth" element={<><Navbar /><Auth /></>} />
             
             {/* Protected routes */}
             <Route path="/dashboard" element={
               <ProtectedRoute>
-                <Dashboard />
+                <><Navbar /><Dashboard /></>
               </ProtectedRoute>
             } />
             <Route path="/categories" element={
               <ProtectedRoute>
-                <Categories />
+                <><Navbar /><Categories /></>
               </ProtectedRoute>
             } />
             <Route path="/my-requests" element={
               <ProtectedRoute>
-                <MyRequests />
+                <><Navbar /><MyRequests /></>
               </ProtectedRoute>
             } />
             <Route path="/my-profile" element={
               <ProtectedRoute>
-                <MyProfile />
+                <><Navbar /><MyProfile /></>
               </ProtectedRoute>
             } />
             
             {/* Catch all */}
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<><Navbar /><NotFound /></>} />
           </Routes>
         </div>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

@@ -28,46 +28,29 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
 
   const clearErrors = () => {
     setError(null);
     setValidationErrors({});
   };
 
-  const checkAuth = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (token) {
-        const userData = await authAPI.getCurrentUser();
-        setUser(userData);
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      localStorage.removeItem('token');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const login = async (email: string, password: string) => {
     try {
       clearErrors();
-      const { token, user } = await authAPI.login({ email, password });
-      localStorage.setItem('token', token);
-      setUser(user);
+      // Mock login
+      const mockUser = {
+        id: '1',
+        name: 'Test User',
+        email: email,
+        accountType: 'client',
+      };
+      setUser(mockUser);
+      localStorage.setItem('user', JSON.stringify(mockUser));
     } catch (error: any) {
-      const response = error.response?.data;
-      if (response?.errors) {
-        setValidationErrors(response.errors);
-      }
-      setError(response?.message || 'Login failed. Please try again.');
+      setError('Login failed. Please try again.');
       throw error;
     }
   };
@@ -75,21 +58,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (name: string, email: string, password: string, accountType: string) => {
     try {
       clearErrors();
-      const { token, user } = await authAPI.register({ name, email, password, accountType });
-      localStorage.setItem('token', token);
-      setUser(user);
+      // Mock registration
+      const mockUser = {
+        id: '1',
+        name: name,
+        email: email,
+        accountType: accountType,
+      };
+      setUser(mockUser);
+      localStorage.setItem('user', JSON.stringify(mockUser));
     } catch (error: any) {
-      const response = error.response?.data;
-      if (response?.errors) {
-        setValidationErrors(response.errors);
-      }
-      setError(response?.message || 'Registration failed. Please try again.');
+      setError('Registration failed. Please try again.');
       throw error;
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setUser(null);
     clearErrors();
   };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, MapPin, DollarSign, Home, Briefcase, MessageSquare, User, Star, CheckCircle2, Menu, X, Filter, Grid, List, Clock, Award, ChevronRight, ChevronDown, SlidersHorizontal, Heart, Loader2, Map, Calendar, Phone, Mail, Globe, Building2, Car, Computer, Paintbrush, Leaf, Wrench, Sparkles, Shield, Languages, GraduationCap } from 'lucide-react';
+import { Search, MapPin, DollarSign, Home, Briefcase, MessageSquare, User, Star, CheckCircle2, Menu, X, Filter, Grid, List, Clock, Award, ChevronRight, ChevronDown, SlidersHorizontal, Heart, Loader2, Map, Calendar, Phone, Mail, Globe, Building2, Car, Computer, Paintbrush, Leaf, Wrench, Sparkles, Shield, Languages, GraduationCap, LogOut } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
+import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard: React.FC = () => {
   const [priceRange, setPriceRange] = useState([0, 1000]);
@@ -32,6 +33,7 @@ const Dashboard: React.FC = () => {
   const [showContactDialog, setShowContactDialog] = useState(false);
   const [selectedProfessionals, setSelectedProfessionals] = useState<number[]>([]);
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -375,609 +377,342 @@ const Dashboard: React.FC = () => {
   const filteredProfessionals = useMemo(() => {
     return professionals.filter(pro => {
       const matchesSearch = pro.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          pro.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          pro.specialties.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
-      
-      const matchesLocation = !location || pro.distance.includes(location);
+        pro.specialties.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchesCategory = selectedCategory === 'all' || pro.category === selectedCategory;
-      const matchesServiceType = serviceType === 'all' || 
-                               (serviceType === 'home' && pro.category !== 'it') ||
-                               (serviceType === 'remote' && pro.category === 'it') ||
-                               (serviceType === 'agency' && pro.category === 'realestate');
-      
-      const price = parseInt(pro.price.replace(/[^0-9]/g, ''));
-      const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
-
-      return matchesSearch && matchesLocation && matchesCategory && matchesServiceType && matchesPrice;
-    });
-  }, [searchQuery, location, selectedCategory, serviceType, priceRange]);
-
-  const sortedProfessionals = useMemo(() => {
-    return [...filteredProfessionals].sort((a, b) => {
+      const matchesPrice = parseFloat(pro.price.replace('$', '').replace('/hr', '')) >= priceRange[0] && 
+                          parseFloat(pro.price.replace('$', '').replace('/hr', '')) <= priceRange[1];
+      return matchesSearch && matchesCategory && matchesPrice;
+    }).sort((a, b) => {
       switch (sortBy) {
         case 'rating':
           return b.rating - a.rating;
-        case 'price-asc':
-          return parseInt(a.price.replace(/[^0-9]/g, '')) - parseInt(b.price.replace(/[^0-9]/g, ''));
-        case 'price-desc':
-          return parseInt(b.price.replace(/[^0-9]/g, '')) - parseInt(a.price.replace(/[^0-9]/g, ''));
+        case 'price':
+          return parseFloat(a.price.replace('$', '')) - parseFloat(b.price.replace('$', ''));
         case 'distance':
           return parseFloat(a.distance) - parseFloat(b.distance);
         default:
           return 0;
       }
     });
-  }, [filteredProfessionals, sortBy]);
-
-  const selectedProfessionalData = useMemo(() => {
-    return professionals.find(pro => pro.id === selectedProfessional);
-  }, [selectedProfessional]);
-
-  const sortOptions = [
-    { value: 'rating', label: 'Top Rated' },
-    { value: 'price-asc', label: 'Price: Low to High' },
-    { value: 'price-desc', label: 'Price: High to Low' },
-    { value: 'distance', label: 'Nearest First' },
-  ];
+  }, [professionals, searchQuery, selectedCategory, priceRange, sortBy]);
 
   const LoadingSkeleton = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {[1, 2, 3, 4, 5, 6].map((i) => (
-        <Card key={i} className="p-6">
-          <div className="flex items-start space-x-4">
-            <Skeleton className="h-16 w-16 rounded-full" />
-            <div className="flex-1 space-y-3">
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-              <Skeleton className="h-4 w-2/3" />
-              <Skeleton className="h-4 w-1/4" />
-            </div>
-          </div>
+      {[...Array(6)].map((_, i) => (
+        <Card key={i} className="p-4">
+          <Skeleton className="h-48 w-full rounded-lg mb-4" />
+          <Skeleton className="h-4 w-3/4 mb-2" />
+          <Skeleton className="h-4 w-1/2" />
         </Card>
       ))}
     </div>
   );
 
-  const ContactDialog = () => {
-    const selectedPros = professionals.filter(pro => selectedProfessionals.includes(pro.id));
-    
-    return (
-      <Dialog open={showContactDialog} onOpenChange={setShowContactDialog}>
-        <DialogContent className="max-w-2xl bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-gray-800">Contact Selected Professionals</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6">
-            <div className="space-y-4">
-              {selectedPros.map((pro) => (
-                <div key={pro.id} className="p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Avatar>
-                        <AvatarImage src={pro.photo} alt={pro.name} />
-                        <AvatarFallback className="bg-prohome-blue/10 text-prohome-blue">
-                          {pro.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-semibold text-gray-800">{pro.name}</h3>
-                        <p className="text-sm text-gray-600">{pro.category}</p>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleSelectedProfessional(pro.id)}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                  <div className="mt-4 grid grid-cols-2 gap-4">
-                    <div className="flex items-center space-x-2">
-                      <Phone className="text-prohome-blue" size={16} />
-                      <span className="text-gray-700">+1 (555) 123-4567</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Mail className="text-prohome-blue" size={16} />
-                      <span className="text-gray-700">{pro.name.toLowerCase().replace(' ', '.')}@example.com</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="text-prohome-blue" size={16} />
-                      <span className="text-gray-700">{pro.distance} away</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Clock className="text-prohome-blue" size={16} />
-                      <span className="text-gray-700">{pro.availability}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-end space-x-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowContactDialog(false)}
-                className="bg-white text-prohome-blue border-prohome-blue hover:bg-prohome-blue/10 hover:text-prohome-blue"
-              >
-                Close
-              </Button>
-              <Button
-                className="bg-white text-prohome-blue border-prohome-blue hover:bg-prohome-blue/10 hover:text-prohome-blue"
-                onClick={() => {
-                  // Here you would implement the actual contact functionality
-                  alert('Contact request sent to selected professionals!');
-                  setShowContactDialog(false);
-                }}
-              >
-                Send Contact Request
-              </Button>
+  const ContactDialog = () => (
+    <Dialog open={showContactDialog} onOpenChange={setShowContactDialog}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Contact Professional</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="flex items-center space-x-4">
+            <Avatar>
+              <AvatarImage src={professionals.find(p => p.id === selectedProfessional)?.photo} />
+              <AvatarFallback>P</AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="font-semibold">{professionals.find(p => p.id === selectedProfessional)?.name}</h3>
+              <p className="text-sm text-gray-500">{professionals.find(p => p.id === selectedProfessional)?.category}</p>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    );
-  };
-
-  const ProfessionalProfileDialog = () => {
-    if (!selectedProfessionalData) return null;
-
-    return (
-      <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
-        <DialogContent className="max-w-3xl bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-gray-800">{selectedProfessionalData.name}</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-1">
-              <Avatar className="h-32 w-32 mx-auto">
-                <AvatarImage src={selectedProfessionalData.photo} alt={selectedProfessionalData.name} />
-                <AvatarFallback className="bg-prohome-blue/10 text-prohome-blue">
-                  {selectedProfessionalData.name.split(' ').map(n => n[0]).join('')}
-                </AvatarFallback>
-              </Avatar>
-              <div className="mt-4 text-center">
-                <div className="flex items-center justify-center space-x-2">
-                  <Star className="text-yellow-400" size={20} />
-                  <span className="font-semibold text-gray-800">{selectedProfessionalData.rating}</span>
-                  <span className="text-gray-600">({selectedProfessionalData.reviews} reviews)</span>
-                </div>
-                <div className="mt-2">
-                  <Badge variant="secondary" className="bg-green-100 text-green-800">
-                    {selectedProfessionalData.available ? 'Available Now' : 'Not Available'}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-            <div className="md:col-span-2">
-              <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 bg-gray-100">
-                  <TabsTrigger 
-                    value="overview" 
-                    className="text-gray-700 data-[state=active]:bg-white data-[state=active]:text-prohome-blue"
-                  >
-                    Overview
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="portfolio" 
-                    className="text-gray-700 data-[state=active]:bg-white data-[state=active]:text-prohome-blue"
-                  >
-                    Portfolio
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="reviews" 
-                    className="text-gray-700 data-[state=active]:bg-white data-[state=active]:text-prohome-blue"
-                  >
-                    Reviews
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value="overview" className="space-y-4">
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-800">About</h3>
-                    <p className="text-gray-600">{selectedProfessionalData.description}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-800">Specialties</h3>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {selectedProfessionalData.specialties.map((specialty, index) => (
-                        <Badge key={index} variant="secondary" className="bg-gray-100 text-gray-700">
-                          {specialty}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-800">Details</h3>
-                    <div className="grid grid-cols-2 gap-4 mt-2">
-                      <div className="flex items-center space-x-2">
-                        <Award className="text-prohome-orange" size={16} />
-                        <span className="text-gray-700">{selectedProfessionalData.experience}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="text-gray-400" size={16} />
-                        <span className="text-gray-700">{selectedProfessionalData.distance} away</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Clock className="text-gray-400" size={16} />
-                        <span className="text-gray-700">Response: {selectedProfessionalData.responseTime}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <DollarSign className="text-gray-400" size={16} />
-                        <span className="text-gray-700">{selectedProfessionalData.price}</span>
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-                <TabsContent value="portfolio" className="space-y-4">
-                  <div className="space-y-4">
-                    {selectedProfessionalData.portfolio.map((item, index) => (
-                      <div key={index} className="p-4 bg-gray-50 rounded-lg">
-                        <h4 className="font-semibold text-gray-800">{item}</h4>
-                      </div>
-                    ))}
-                  </div>
-                </TabsContent>
-                <TabsContent value="reviews" className="space-y-4">
-                  <div className="space-y-4">
-                    {/* Sample reviews */}
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-2">
-                        <Star className="text-yellow-400" size={16} />
-                        <span className="font-semibold text-gray-800">5.0</span>
-                      </div>
-                      <p className="mt-2 text-gray-600">"Excellent service! Very professional and efficient."</p>
-                      <p className="text-sm text-gray-500 mt-2">- John D.</p>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-              <div className="mt-6 flex space-x-4">
-                <Button 
-                  className="flex-1 bg-white text-prohome-blue border-prohome-blue hover:bg-prohome-blue/10 hover:text-prohome-blue"
-                  onClick={() => {
-                    toggleSelectedProfessional(selectedProfessionalData.id);
-                    setShowProfileDialog(false);
-                    setShowContactDialog(true);
-                  }}
-                >
-                  <Phone className="mr-2" size={16} />
-                  Contact Now
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex-1 bg-white text-prohome-blue border-prohome-blue hover:bg-prohome-blue/10 hover:text-prohome-blue"
-                  onClick={() => {
-                    toggleSelectedProfessional(selectedProfessionalData.id);
-                    setShowProfileDialog(false);
-                    setShowContactDialog(true);
-                  }}
-                >
-                  <MessageSquare className="mr-2" size={16} />
-                  Send Message
-                </Button>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-8">
-              <Link to="/" className="text-xl font-bold text-prohome-blue">
-                Aweni
-              </Link>
-              <div className="hidden md:flex space-x-6">
-                <Link to="/dashboard" className="text-gray-700 hover:text-prohome-blue">
-                  Home
-                </Link>
-                <Link to="/categories" className="text-gray-700 hover:text-prohome-blue">
-                  Categories
-                </Link>
-                <Link to="/my-requests" className="text-gray-700 hover:text-prohome-blue">
-                  My Requests
-                </Link>
-                <Link to="/my-profile" className="text-gray-700 hover:text-prohome-blue">
-                  My Profile
-                </Link>
-              </div>
-            </div>
-            <button
-              className="md:hidden text-gray-700"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-
-          {/* Mobile Menu */}
-          {isMobileMenuOpen && (
-            <div className="md:hidden py-4 border-t">
-              <div className="flex flex-col space-y-4">
-                <Link
-                  to="/dashboard"
-                  className="text-gray-700 hover:text-prohome-blue"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Home
-                </Link>
-                <Link
-                  to="/categories"
-                  className="text-gray-700 hover:text-prohome-blue"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Categories
-                </Link>
-                <Link
-                  to="/my-requests"
-                  className="text-gray-700 hover:text-prohome-blue"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  My Requests
-                </Link>
-                <Link
-                  to="/my-profile"
-                  className="text-gray-700 hover:text-prohome-blue"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  My Profile
-                </Link>
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        {/* Hero Section */}
-        <div className="bg-gradient-to-r from-prohome-blue to-prohome-blue/90 rounded-2xl p-8 mb-8 text-white shadow-lg">
-          <h1 className="text-3xl font-bold mb-4">Find Your Perfect Professional</h1>
-          <p className="text-lg mb-6 text-white/90">Thousands of qualified professionals at your service</p>
-          
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <Input
-              placeholder="What are you looking for?"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white border-gray-200 text-gray-800 placeholder:text-gray-400 focus:border-prohome-blue/30 focus:ring-prohome-blue/20"
-            />
-          </div>
-        </div>
-
-        {/* Filters Section */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-800">Filters</h2>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center space-x-2 bg-white text-prohome-blue border-prohome-blue hover:bg-prohome-blue/10 hover:text-prohome-blue"
-            >
-              <SlidersHorizontal size={16} />
-              <span>{showFilters ? 'Hide' : 'Show'} Filters</span>
+          <div className="space-y-2">
+            <Button className="w-full" variant="outline">
+              <Phone className="mr-2 h-4 w-4" />
+              Call Now
+            </Button>
+            <Button className="w-full" variant="outline">
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Send Message
+            </Button>
+            <Button className="w-full" variant="outline">
+              <Calendar className="mr-2 h-4 w-4" />
+              Schedule Appointment
             </Button>
           </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 
-          {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Category Select */}
+  const ProfessionalProfileDialog = () => (
+    <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Professional Profile</DialogTitle>
+        </DialogHeader>
+        {selectedProfessional && (
+          <div className="space-y-6">
+            <div className="flex items-start space-x-4">
+              <Avatar className="h-20 w-20">
+                <AvatarImage src={professionals.find(p => p.id === selectedProfessional)?.photo} />
+                <AvatarFallback>P</AvatarFallback>
+              </Avatar>
               <div>
-                <Label className="text-gray-700">Category</Label>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {categories.map((category) => (
-                    <Badge
-                      key={category.id}
-                      variant="outline"
-                      className={`${category.color} cursor-pointer hover:opacity-80 ${
-                        selectedCategory === category.id ? 'ring-2 ring-prohome-blue' : ''
-                      }`}
-                      onClick={() => setSelectedCategory(category.id)}
-                    >
-                      {category.icon}
-                      <span className="ml-1">{category.name}</span>
+                <h3 className="text-xl font-semibold">{professionals.find(p => p.id === selectedProfessional)?.name}</h3>
+                <div className="flex items-center space-x-2 mt-1">
+                  <Star className="h-4 w-4 text-yellow-500" />
+                  <span>{professionals.find(p => p.id === selectedProfessional)?.rating}</span>
+                  <span className="text-gray-500">({professionals.find(p => p.id === selectedProfessional)?.reviews} reviews)</span>
+                </div>
+                <div className="flex items-center space-x-2 mt-2">
+                  <Badge variant="secondary">
+                    {professionals.find(p => p.id === selectedProfessional)?.category}
+                  </Badge>
+                  {professionals.find(p => p.id === selectedProfessional)?.verified && (
+                    <Badge variant="outline" className="border-green-500 text-green-500">
+                      Verified
                     </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <h4 className="font-semibold">About</h4>
+                <p className="text-gray-600">{professionals.find(p => p.id === selectedProfessional)?.description}</p>
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-semibold">Specialties</h4>
+                <div className="flex flex-wrap gap-2">
+                  {professionals.find(p => p.id === selectedProfessional)?.specialties.map((specialty, index) => (
+                    <Badge key={index} variant="outline">{specialty}</Badge>
                   ))}
                 </div>
               </div>
-
-              {/* Location Input */}
-              <div>
-                <Label className="text-gray-700">Location</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
-                  <Input
-                    placeholder="City or ZIP code"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="pl-10 bg-white border-gray-200 text-gray-800 placeholder:text-gray-400 focus:border-prohome-blue/30 focus:ring-prohome-blue/20"
-                  />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <h4 className="font-semibold">Availability</h4>
+                <p className="text-gray-600">{professionals.find(p => p.id === selectedProfessional)?.availability}</p>
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-semibold">Languages</h4>
+                <div className="flex flex-wrap gap-2">
+                  {professionals.find(p => p.id === selectedProfessional)?.languages.map((language, index) => (
+                    <Badge key={index} variant="outline">{language}</Badge>
+                  ))}
                 </div>
               </div>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowProfileDialog(false)}>Close</Button>
+              <Button onClick={() => {
+                setShowProfileDialog(false);
+                setShowContactDialog(true);
+              }}>Contact</Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
 
-              {/* Price Range Slider */}
-              <div>
-                <Label className="text-gray-700">Price Range</Label>
-                <div className="mt-2">
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </Button>
+              <h1 className="text-2xl font-bold text-prohome-blue">Dashboard</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button variant="outline" onClick={() => logout()}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        {/* Search and Filters */}
+        <div className="mb-8">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Input
+                  placeholder="Search professionals..."
+                  className="pl-10"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+                <Filter className="mr-2 h-4 w-4" />
+                Filters
+              </Button>
+              <Button variant="outline" onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}>
+                {viewMode === 'grid' ? <List className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+
+          {/* Filters Panel */}
+          {showFilters && (
+            <div className="mt-4 p-4 bg-white rounded-lg shadow">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label>Category</Label>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(category => (
+                        <SelectItem key={category.id} value={category.id}>
+                          <div className="flex items-center">
+                            <span className={`mr-2 ${category.color} p-1 rounded`}>
+                              {category.icon}
+                            </span>
+                            {category.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Price Range</Label>
                   <Slider
                     value={priceRange}
                     onValueChange={setPriceRange}
                     min={0}
                     max={1000}
                     step={10}
-                    className="[&_[role=slider]]:bg-prohome-blue [&_[role=slider]]:border-prohome-blue"
                   />
-                  <div className="flex justify-between text-sm text-gray-600 mt-2">
+                  <div className="flex justify-between text-sm text-gray-500">
                     <span>${priceRange[0]}</span>
                     <span>${priceRange[1]}</span>
                   </div>
                 </div>
-              </div>
-
-              {/* Service Type Radio Group */}
-              <div>
-                <Label className="text-gray-700">Service Type</Label>
-                <RadioGroup
-                  value={serviceType}
-                  onValueChange={setServiceType}
-                  className="flex space-x-4 mt-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="all" id="all" className="border-gray-300 data-[state=checked]:bg-prohome-blue data-[state=checked]:border-prohome-blue" />
-                    <Label htmlFor="all" className="text-gray-700">All</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="home" id="home" className="border-gray-300 data-[state=checked]:bg-prohome-blue data-[state=checked]:border-prohome-blue" />
-                    <Label htmlFor="home" className="text-gray-700">At Home</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="remote" id="remote" className="border-gray-300 data-[state=checked]:bg-prohome-blue data-[state=checked]:border-prohome-blue" />
-                    <Label htmlFor="remote" className="text-gray-700">Remote</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="agency" id="agency" className="border-gray-300 data-[state=checked]:bg-prohome-blue data-[state=checked]:border-prohome-blue" />
-                    <Label htmlFor="agency" className="text-gray-700">At Agency</Label>
-                  </div>
-                </RadioGroup>
+                <div>
+                  <Label>Sort By</Label>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="rating">Rating</SelectItem>
+                      <SelectItem value="price">Price</SelectItem>
+                      <SelectItem value="distance">Distance</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Results Section */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-800">
-            {sortedProfessionals.length} Professionals Found
-          </h2>
-          <div className="flex items-center space-x-4">
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[180px] bg-white border-prohome-blue text-prohome-blue hover:bg-prohome-blue/10 hover:text-prohome-blue">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-prohome-blue">
-                {sortOptions.map((option) => (
-                  <SelectItem 
-                    key={option.value} 
-                    value={option.value}
-                    className="text-prohome-blue hover:bg-prohome-blue/10 hover:text-prohome-blue focus:bg-prohome-blue/10 focus:text-prohome-blue"
-                  >
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="flex space-x-2">
+        {/* Categories */}
+        <div className="mb-8">
+          <div className="flex overflow-x-auto gap-2 pb-4">
+            {categories.map(category => (
               <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="icon"
-                onClick={() => setViewMode('grid')}
-                className="hover:scale-105 transition-transform bg-white text-prohome-blue border-prohome-blue hover:bg-prohome-blue/10 hover:text-prohome-blue"
+                key={category.id}
+                variant={selectedCategory === category.id ? "default" : "outline"}
+                className={`flex items-center space-x-2 ${selectedCategory === category.id ? category.color : ''}`}
+                onClick={() => setSelectedCategory(category.id)}
               >
-                <Grid size={20} />
+                {category.icon}
+                <span>{category.name}</span>
               </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="icon"
-                onClick={() => setViewMode('list')}
-                className="hover:scale-105 transition-transform bg-white text-prohome-blue border-prohome-blue hover:bg-prohome-blue/10 hover:text-prohome-blue"
-              >
-                <List size={20} />
-              </Button>
-            </div>
+            ))}
           </div>
         </div>
 
+        {/* Professionals Grid/List */}
         {isLoading ? (
           <LoadingSkeleton />
         ) : (
-          <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-6'}`}>
-            {sortedProfessionals.map((pro) => (
-              <Card key={pro.id} className="overflow-hidden hover:shadow-lg transition-shadow bg-white">
-                <div className="p-6">
+          <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+            {filteredProfessionals.map(professional => (
+              <Card key={professional.id} className="overflow-hidden">
+                <div className="relative p-4">
                   <div className="flex items-start space-x-4">
-                    <div className="relative">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={pro.photo} alt={pro.name} />
-                        <AvatarFallback className="bg-prohome-blue/10 text-prohome-blue">
-                          {pro.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      {pro.available && (
-                        <div className="absolute bottom-0 right-0 bg-green-500 rounded-full p-1">
-                          <Clock className="text-white" size={12} />
-                        </div>
-                      )}
-                    </div>
+                    <Avatar className="h-16 w-16 border-2 border-white">
+                      <AvatarImage src={professional.photo} />
+                      <AvatarFallback>{professional.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
                     <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <h3 className="text-lg font-semibold text-gray-800">{pro.name}</h3>
-                          {pro.verified && (
-                            <CheckCircle2 className="text-prohome-blue" size={16} />
-                          )}
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="font-semibold">{professional.name}</h3>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <Star className="h-4 w-4 text-yellow-500" />
+                            <span>{professional.rating}</span>
+                            <span className="text-gray-500">({professional.reviews} reviews)</span>
+                          </div>
                         </div>
-                        <button
-                          onClick={() => toggleFavorite(pro.id)}
-                          className="text-gray-400 hover:text-red-500 transition-colors"
-                        >
-                          <Heart
-                            size={20}
-                            className={favorites.includes(pro.id) ? 'text-red-500 fill-red-500' : ''}
-                          />
-                        </button>
+                        <Badge variant="secondary">{professional.category}</Badge>
                       </div>
-                      <div className="flex items-center space-x-2 text-sm text-gray-600 mt-1">
-                        <Star className="text-yellow-400" size={16} />
-                        <span>{pro.rating}</span>
-                        <span>({pro.reviews} reviews)</span>
-                      </div>
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <Award className="text-prohome-orange" size={16} />
-                        <span>{pro.experience}</span>
-                      </div>
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <MapPin className="text-gray-400" size={16} />
-                        <span>{pro.distance} away</span>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-                        {pro.description}
-                      </p>
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {pro.specialties.map((specialty, index) => (
-                          <Badge key={index} variant="secondary" className="bg-gray-100 text-gray-700">
-                            {specialty}
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="mt-4 flex items-center justify-between">
-                        <div className="flex items-center space-x-2 text-sm text-gray-600">
-                          <Clock className="text-gray-400" size={16} />
-                          <span>Response: {pro.responseTime}</span>
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center text-sm text-gray-500">
+                          <MapPin className="h-4 w-4 mr-2" />
+                          <span>{professional.distance} away</span>
                         </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
+                        <div className="flex items-center text-sm text-gray-500">
+                          <DollarSign className="h-4 w-4 mr-2" />
+                          <span>{professional.price}</span>
+                        </div>
+                        <div className="flex items-center text-sm text-gray-500">
+                          <Clock className="h-4 w-4 mr-2" />
+                          <span>{professional.responseTime}</span>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex space-x-2">
+                        <Button
+                          variant="outline"
+                          className="flex-1"
                           onClick={() => {
-                            setSelectedProfessional(pro.id);
+                            setSelectedProfessional(professional.id);
                             setShowProfileDialog(true);
                           }}
-                          className="bg-white text-prohome-blue border-prohome-blue hover:bg-prohome-blue/10 hover:text-prohome-blue"
                         >
                           View Profile
+                        </Button>
+                        <Button
+                          className="flex-1"
+                          onClick={() => {
+                            setSelectedProfessional(professional.id);
+                            setShowContactDialog(true);
+                          }}
+                        >
+                          Contact
                         </Button>
                       </div>
                     </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+                    onClick={() => toggleFavorite(professional.id)}
+                  >
+                    <Heart
+                      className={`h-5 w-5 ${
+                        favorites.includes(professional.id) ? 'text-red-500 fill-red-500' : 'text-gray-400'
+                      }`}
+                    />
+                  </Button>
                 </div>
               </Card>
             ))}
@@ -985,21 +720,9 @@ const Dashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Add selected professionals count badge */}
-      {selectedProfessionals.length > 0 && (
-        <div className="fixed bottom-4 right-4">
-          <Button
-            className="bg-prohome-orange text-white hover:bg-prohome-orange/90"
-            onClick={() => setShowContactDialog(true)}
-          >
-            <MessageSquare className="mr-2" size={16} />
-            Contact {selectedProfessionals.length} Professional{selectedProfessionals.length > 1 ? 's' : ''}
-          </Button>
-        </div>
-      )}
-
-      <ProfessionalProfileDialog />
+      {/* Dialogs */}
       <ContactDialog />
+      <ProfessionalProfileDialog />
     </div>
   );
 };
