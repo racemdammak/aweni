@@ -24,8 +24,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
+    <AuthProvider>
+      <Router>
         <div className="min-h-screen bg-gray-50">
           <Routes>
             {/* Public routes */}
@@ -63,8 +63,8 @@ function App() {
             <Route path="*" element={<><Navbar /><NotFound /></>} />
           </Routes>
         </div>
-      </AuthProvider>
-    </Router>
+      </Router>
+    </AuthProvider>
   );
 }
 

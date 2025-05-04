@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: string;
@@ -13,7 +12,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  navigateToDashboard: () => void;
+  navigateToDashboard: (email: string) => void;
   logout: () => void;
   toggleFavorite: (professionalId: number) => void;
   isFavorite: (professionalId: number) => boolean;
@@ -22,7 +21,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(() => {
     const storedUser = localStorage.getItem('user');
     return storedUser ? JSON.parse(storedUser) : null;
@@ -36,16 +34,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
-  const navigateToDashboard = () => {
+  const navigateToDashboard = (email: string) => {
+    const username = email.split('@')[0];
     const newUser = {
       id: '1',
-      name: 'Test User',
-      email: 'test@example.com',
+      name: username.charAt(0).toUpperCase() + username.slice(1),
+      email: email,
       accountType: 'client',
       favorites: [],
     };
     setUser(newUser);
-    navigate('/dashboard');
   };
 
   const logout = () => {
@@ -84,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         navigateToDashboard,
         logout,
         toggleFavorite,
-        isFavorite
+        isFavorite,
       }}
     >
       {children}

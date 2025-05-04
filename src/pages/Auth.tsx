@@ -18,10 +18,16 @@ const Auth = () => {
     accountType: 'client',
   });
   const { navigateToDashboard } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigateToDashboard();
+    if (isLogin) {
+      navigateToDashboard(formData.email);
+      navigate('/dashboard');
+    } else {
+      setIsLogin(true);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
+
 const Dashboard: React.FC = () => {
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [serviceType, setServiceType] = useState('all');
@@ -25,7 +26,7 @@ const Dashboard: React.FC = () => {
   const [sortBy, setSortBy] = useState('rating');
   const [showFilters, setShowFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedProfessional, setSelectedProfessional] = useState<number | null>(null);
+  const [selectedProfessionalId, setSelectedProfessionalId] = useState<number | null>(null);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useState('');
@@ -33,6 +34,7 @@ const Dashboard: React.FC = () => {
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showContactDialog, setShowContactDialog] = useState(false);
   const [selectedProfessionals, setSelectedProfessionals] = useState<number[]>([]);
+  const [showBookingDialog, setShowBookingDialog] = useState(false);
   const navigate = useNavigate();
   const { navigateToDashboard, logout, user, toggleFavorite, isFavorite } = useAuth();
 
@@ -360,17 +362,17 @@ const Dashboard: React.FC = () => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Contact Professional</DialogTitle>
-          <DialogDescription>Contact options for {professionals.find(p => p.id === selectedProfessional)?.name}</DialogDescription>
+          <DialogDescription>Contact options for {professionals.find(p => p.id === selectedProfessionalId)?.name}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="flex items-center space-x-4">
             <Avatar>
-              <AvatarImage src={professionals.find(p => p.id === selectedProfessional)?.photo} />
+              <AvatarImage src={professionals.find(p => p.id === selectedProfessionalId)?.photo} />
               <AvatarFallback>P</AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="font-semibold">{professionals.find(p => p.id === selectedProfessional)?.name}</h3>
-              <p className="text-sm text-gray-500">{professionals.find(p => p.id === selectedProfessional)?.category}</p>
+              <h3 className="font-semibold">{professionals.find(p => p.id === selectedProfessionalId)?.name}</h3>
+              <p className="text-sm text-gray-500">{professionals.find(p => p.id === selectedProfessionalId)?.category}</p>
             </div>
           </div>
           <div className="space-y-2">
@@ -397,27 +399,27 @@ const Dashboard: React.FC = () => {
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Professional Profile</DialogTitle>
-          <DialogDescription>View detailed information about {professionals.find(p => p.id === selectedProfessional)?.name}</DialogDescription>
+          <DialogDescription>View detailed information about {professionals.find(p => p.id === selectedProfessionalId)?.name}</DialogDescription>
         </DialogHeader>
-        {selectedProfessional && (
+        {selectedProfessionalId && (
           <div className="space-y-6">
             <div className="flex items-start space-x-4">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={professionals.find(p => p.id === selectedProfessional)?.photo} />
+                <AvatarImage src={professionals.find(p => p.id === selectedProfessionalId)?.photo} />
                 <AvatarFallback>P</AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="text-xl font-semibold">{professionals.find(p => p.id === selectedProfessional)?.name}</h3>
+                <h3 className="text-xl font-semibold">{professionals.find(p => p.id === selectedProfessionalId)?.name}</h3>
                 <div className="flex items-center space-x-2 mt-1">
                   <Star className="h-4 w-4 text-yellow-500" />
-                  <span>{professionals.find(p => p.id === selectedProfessional)?.rating}</span>
-                  <span className="text-gray-500">({professionals.find(p => p.id === selectedProfessional)?.reviews} reviews)</span>
+                  <span>{professionals.find(p => p.id === selectedProfessionalId)?.rating}</span>
+                  <span className="text-gray-500">({professionals.find(p => p.id === selectedProfessionalId)?.reviews} reviews)</span>
                 </div>
                 <div className="flex items-center space-x-2 mt-2">
                   <Badge variant="secondary">
-                    {professionals.find(p => p.id === selectedProfessional)?.category}
+                    {professionals.find(p => p.id === selectedProfessionalId)?.category}
                   </Badge>
-                  {professionals.find(p => p.id === selectedProfessional)?.verified && (
+                  {professionals.find(p => p.id === selectedProfessionalId)?.verified && (
                     <Badge variant="outline" className="border-green-500 text-green-500">
                       Verified
                     </Badge>
@@ -428,12 +430,12 @@ const Dashboard: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <h4 className="font-semibold">About</h4>
-                <p className="text-gray-600">{professionals.find(p => p.id === selectedProfessional)?.description}</p>
+                <p className="text-gray-600">{professionals.find(p => p.id === selectedProfessionalId)?.description}</p>
               </div>
               <div className="space-y-2">
                 <h4 className="font-semibold">Specialties</h4>
                 <div className="flex flex-wrap gap-2">
-                  {professionals.find(p => p.id === selectedProfessional)?.specialties.map((specialty, index) => (
+                  {professionals.find(p => p.id === selectedProfessionalId)?.specialties.map((specialty, index) => (
                     <Badge key={index} variant="outline">{specialty}</Badge>
                   ))}
                 </div>
@@ -442,12 +444,12 @@ const Dashboard: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <h4 className="font-semibold">Availability</h4>
-                <p className="text-gray-600">{professionals.find(p => p.id === selectedProfessional)?.availability}</p>
+                <p className="text-gray-600">{professionals.find(p => p.id === selectedProfessionalId)?.availability}</p>
               </div>
               <div className="space-y-2">
                 <h4 className="font-semibold">Languages</h4>
                 <div className="flex flex-wrap gap-2">
-                  {professionals.find(p => p.id === selectedProfessional)?.languages.map((language, index) => (
+                  {professionals.find(p => p.id === selectedProfessionalId)?.languages.map((language, index) => (
                     <Badge key={index} variant="outline">{language}</Badge>
                   ))}
                 </div>
@@ -465,6 +467,7 @@ const Dashboard: React.FC = () => {
       </DialogContent>
     </Dialog>
   );
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -626,7 +629,7 @@ const Dashboard: React.FC = () => {
                           variant="outline"
                           className="flex-1"
                           onClick={() => {
-                            setSelectedProfessional(professional.id);
+                            setSelectedProfessionalId(professional.id);
                             setShowProfileDialog(true);
                           }}
                         >
@@ -635,7 +638,7 @@ const Dashboard: React.FC = () => {
                         <Button
                           className="flex-1"
                           onClick={() => {
-                            setSelectedProfessional(professional.id);
+                            setSelectedProfessionalId(professional.id);
                             setShowContactDialog(true);
                           }}
                         >
