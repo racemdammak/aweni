@@ -1,96 +1,55 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../services/api';
+import React, { createContext, useContext, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: string;
   name: string;
   email: string;
   accountType: string;
-}
-
-interface ValidationErrors {
-  [key: string]: string | null;
+  photo?: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
-  error: string | null;
-  validationErrors: ValidationErrors;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, accountType: string) => Promise<void>;
+  navigateToDashboard: (email: string, name: string, accountType: string) => void;
   logout: () => void;
-  clearErrors: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(() => {
+    const storedUser = localStorage.getItem('user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
 
-  const clearErrors = () => {
-    setError(null);
-    setValidationErrors({});
-  };
-
-  const login = async (email: string, password: string) => {
-    try {
-      clearErrors();
-      // Mock login
-      const mockUser = {
-        id: '1',
-        name: 'Test User',
-        email: email,
-        accountType: 'client',
-      };
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-    } catch (error: any) {
-      setError('Login failed. Please try again.');
-      throw error;
-    }
-  };
-
-  const register = async (name: string, email: string, password: string, accountType: string) => {
-    try {
-      clearErrors();
-      // Mock registration
-      const mockUser = {
-        id: '1',
-        name: name,
-        email: email,
-        accountType: accountType,
-      };
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-    } catch (error: any) {
-      setError('Registration failed. Please try again.');
-      throw error;
-    }
+  const navigateToDashboard = (email: string, name: string, accountType: string) => {
+    const userId = Date.now().toString(); // Generate unique ID
+    const user = {
+      id: userId,
+      name: name || email.split('@')[0], // Use name if provided, otherwise first part of email
+      email,
+      accountType,
+    };
+    setUser(user);
+    localStorage.setItem('user', JSON.stringify(user));
+    navigate('/dashboard');
   };
 
   const logout = () => {
-    localStorage.removeItem('user');
     setUser(null);
-    clearErrors();
+    localStorage.removeItem('user');
   };
 
   return (
     <AuthContext.Provider 
       value={{ 
         user, 
-        loading, 
-        error, 
-        validationErrors,
         isAuthenticated: !!user,
-        login, 
-        register, 
-        logout,
-        clearErrors
+        navigateToDashboard,
+        logout
       }}
     >
       {children}
@@ -106,4 +65,4 @@ export const useAuth = () => {
   return context;
 };
 
-export default AuthContext; 
+export default AuthContext;

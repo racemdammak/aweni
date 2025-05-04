@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, MapPin, DollarSign, Home, Briefcase, MessageSquare, User, Star, CheckCircle2, Menu, X, Filter, Grid, List, Clock, Award, ChevronRight, ChevronDown, SlidersHorizontal, Heart, Loader2, Map, Calendar, Phone, Mail, Globe, Building2, Car, Computer, Paintbrush, Leaf, Wrench, Sparkles, Shield, Languages, GraduationCap, LogOut } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Navbar from "@/components/Navbar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -10,10 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link, useNavigate } from 'react-router-dom';
-import Navbar from '@/components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard: React.FC = () => {
@@ -33,7 +34,7 @@ const Dashboard: React.FC = () => {
   const [showContactDialog, setShowContactDialog] = useState(false);
   const [selectedProfessionals, setSelectedProfessionals] = useState<number[]>([]);
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { navigateToDashboard, logout, user } = useAuth();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -43,6 +44,16 @@ const Dashboard: React.FC = () => {
   }, []);
 
   const toggleFavorite = (id: number) => {
+    // Only allow favoriting if not a guest
+    if (user === null) {
+      toast.error('This feature is not available for guest users');
+      return;
+    }
+    setFavorites(prev => 
+      prev.includes(id) 
+        ? prev.filter(favId => favId !== id)
+        : [...prev, id]
+    );
     setFavorites(prev => 
       prev.includes(id) 
         ? prev.filter(favId => favId !== id)
@@ -413,6 +424,7 @@ const Dashboard: React.FC = () => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Contact Professional</DialogTitle>
+          <DialogDescription>Contact options for {professionals.find(p => p.id === selectedProfessional)?.name}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="flex items-center space-x-4">
@@ -449,6 +461,7 @@ const Dashboard: React.FC = () => {
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Professional Profile</DialogTitle>
+          <DialogDescription>View detailed information about {professionals.find(p => p.id === selectedProfessional)?.name}</DialogDescription>
         </DialogHeader>
         {selectedProfessional && (
           <div className="space-y-6">
@@ -519,26 +532,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              </Button>
-              <h1 className="text-2xl font-bold text-prohome-blue">Dashboard</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" onClick={() => logout()}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {/* Search and Filters */}
@@ -587,6 +580,20 @@ const Dashboard: React.FC = () => {
                           </div>
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Service Type</Label>
+                  <Select value={serviceType} onValueChange={setServiceType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select service type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Services</SelectItem>
+                      <SelectItem value="installation">Installation</SelectItem>
+                      <SelectItem value="repair">Repair</SelectItem>
+                      <SelectItem value="maintenance">Maintenance</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -653,16 +660,16 @@ const Dashboard: React.FC = () => {
                       <AvatarFallback>{professional.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-semibold">{professional.name}</h3>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Star className="h-4 w-4 text-yellow-500" />
-                            <span>{professional.rating}</span>
-                            <span className="text-gray-500">({professional.reviews} reviews)</span>
-                          </div>
+                      <div className="space-y-2">
+                        <h3 className="font-semibold">{professional.name}</h3>
+                        <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
+                          {professional.category}
                         </div>
-                        <Badge variant="secondary">{professional.category}</Badge>
+                        <div className="flex items-center space-x-2">
+                          <Star className="h-4 w-4 text-yellow-500" />
+                          <span>{professional.rating}</span>
+                          <span className="text-gray-500">({professional.reviews} reviews)</span>
+                        </div>
                       </div>
                       <div className="mt-4 space-y-2">
                         <div className="flex items-center text-sm text-gray-500">
@@ -719,8 +726,6 @@ const Dashboard: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* Dialogs */}
       <ContactDialog />
       <ProfessionalProfileDialog />
     </div>

@@ -17,10 +17,8 @@ const Home = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+                <Search className="h-5 w-5 mr-2" />
                 Find a Pro
-              </Button>
-              <Button size="lg" variant="outline">
-                Become a Pro
               </Button>
             </div>
           </div>
@@ -37,6 +35,7 @@ const Home = () => {
                 type="text"
                 placeholder="What service do you need?"
                 className="flex-1 p-2 border-0 focus:outline-none"
+                id="service-search"
               />
             </div>
             <Button className="w-full">Search</Button>

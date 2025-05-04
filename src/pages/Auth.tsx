@@ -1,19 +1,15 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { User, Mail, Lock, Building2, Home, Sparkles, ArrowRight, Loader2, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { User, Mail, Lock, Building2, Home, Sparkles, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -21,57 +17,11 @@ const Auth = () => {
     confirmPassword: '',
     accountType: 'client',
   });
-  const [passwordStrength, setPasswordStrength] = useState(0);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const { navigateToDashboard } = useAuth();
 
-  const { login, signup, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
-
-  // Redirect if already authenticated
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" />;
-  }
-
-  // Password strength calculation
-  useEffect(() => {
-    if (!formData.password) {
-      setPasswordStrength(0);
-      return;
-    }
-
-    let strength = 0;
-    if (formData.password.length >= 8) strength += 20;
-    if (/[A-Z]/.test(formData.password)) strength += 20;
-    if (/[0-9]/.test(formData.password)) strength += 20;
-    if (/[^A-Za-z0-9]/.test(formData.password)) strength += 20;
-    if (formData.password.length >= 12) strength += 20;
-
-    setPasswordStrength(strength);
-  }, [formData.password]);
-
-  // Form validation
-  const validateForm = () => {
-    const errors: Record<string, string> = {};
-    
-    if (!isLogin) {
-      if (!formData.name.trim()) {
-        errors.name = 'Name is required';
-      }
-      if (formData.password !== formData.confirmPassword) {
-        errors.confirmPassword = 'Passwords do not match';
-      }
-    }
-    
-    if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      errors.email = 'Please enter a valid email address';
-    }
-    
-    if (formData.password.length < 8) {
-      errors.password = 'Password must be at least 8 characters long';
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    navigateToDashboard(formData.email, formData.name, formData.accountType);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,22 +30,6 @@ const Auth = () => {
       ...prev,
       [name]: value
     }));
-    setError(null);
-    if (validationErrors[name]) {
-      setValidationErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // Immediately navigate to dashboard without any checks
-    navigate('/dashboard', { replace: true });
-  };
-
-  const getPasswordStrengthColor = () => {
-    if (passwordStrength < 40) return 'bg-red-500';
-    if (passwordStrength < 70) return 'bg-yellow-500';
-    return 'bg-green-500';
   };
 
   return (
@@ -115,13 +49,6 @@ const Auth = () => {
           </p>
         </div>
 
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             {!isLogin && (
@@ -135,16 +62,11 @@ const Auth = () => {
                     name="name"
                     type="text"
                     required
-                    className={`pl-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-prohome-blue focus:ring-prohome-blue/20 ${
-                      validationErrors.name ? 'border-red-500' : ''
-                    }`}
+                    className="pl-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-prohome-blue focus:ring-prohome-blue/20"
                     placeholder="Full Name"
                     value={formData.name}
                     onChange={handleChange}
                   />
-                  {validationErrors.name && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors.name}</p>
-                  )}
                 </div>
 
                 <div className="relative">
@@ -184,16 +106,11 @@ const Auth = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className={`pl-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-prohome-blue focus:ring-prohome-blue/20 ${
-                  validationErrors.email ? 'border-red-500' : ''
-                }`}
+                className="pl-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-prohome-blue focus:ring-prohome-blue/20"
                 placeholder="Email address"
                 value={formData.email}
                 onChange={handleChange}
               />
-              {validationErrors.email && (
-                <p className="text-red-500 text-sm mt-1">{validationErrors.email}</p>
-              )}
             </div>
 
             <div className="relative w-full">
@@ -206,27 +123,11 @@ const Auth = () => {
                 type="password"
                 autoComplete="current-password"
                 required
-                className={`w-full pl-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-prohome-blue focus:ring-prohome-blue/20 ${
-                  validationErrors.password ? 'border-red-500' : ''
-                }`}
+                className="w-full pl-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-prohome-blue focus:ring-prohome-blue/20"
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
               />
-              {!isLogin && formData.password && (
-                <div className="mt-2">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">Password Strength</span>
-                    <span className={getPasswordStrengthColor().replace('bg-', 'text-')}>
-                      {passwordStrength < 40 ? 'Weak' : passwordStrength < 70 ? 'Medium' : 'Strong'}
-                    </span>
-                  </div>
-                  <Progress value={passwordStrength} className={getPasswordStrengthColor()} />
-                </div>
-              )}
-              {validationErrors.password && (
-                <p className="text-red-500 text-sm mt-1">{validationErrors.password}</p>
-              )}
             </div>
 
             {!isLogin && (
@@ -239,16 +140,11 @@ const Auth = () => {
                   name="confirmPassword"
                   type="password"
                   required
-                  className={`w-full pl-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-prohome-blue focus:ring-prohome-blue/20 ${
-                    validationErrors.confirmPassword ? 'border-red-500' : ''
-                  }`}
+                  className="w-full pl-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-prohome-blue focus:ring-prohome-blue/20"
                   placeholder="Confirm Password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                 />
-                {validationErrors.confirmPassword && (
-                  <p className="text-red-500 text-sm mt-1">{validationErrors.confirmPassword}</p>
-                )}
               </div>
             )}
           </div>
@@ -258,19 +154,9 @@ const Auth = () => {
               type="submit"
               className="w-full group bg-prohome-blue hover:bg-prohome-blue/90 text-white"
               size="lg"
-              disabled={isLoading}
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isLogin ? 'Signing in...' : 'Creating account...'}
-                </>
-              ) : (
-                <>
-                  {isLogin ? 'Sign In' : 'Create Account'}
-                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
+              {isLogin ? 'Sign In' : 'Create Account'}
+              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
 
@@ -323,7 +209,6 @@ const Auth = () => {
           <button
             onClick={() => setIsLogin(!isLogin)}
             className="text-sm font-medium text-prohome-blue hover:text-prohome-blue/80 transition-colors"
-            disabled={isLoading}
           >
             {isLogin ? (
               <span className="flex items-center justify-center">
