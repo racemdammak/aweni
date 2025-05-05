@@ -9,7 +9,7 @@ const HowItWorks: React.FC = () => {
       title: 'Find Family Services',
       description: 'Search for the service your family needs and browse local, trusted professionals.',
       bgColor: 'bg-prohome-blue',
-      image: 'https://images.unsplash.com/photo-1639518904146-30bca2ff2591?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80'
+      image:  "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
     },
     {
       icon: <ClipboardCheck className="h-10 w-10 text-white" />,

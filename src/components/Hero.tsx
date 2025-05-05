@@ -4,10 +4,10 @@ import SearchBar from './SearchBar';
 
 const Hero: React.FC = () => {
   const images = [
-    "https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-    "https://images.unsplash.com/photo-1639518904146-30bca2ff2591?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-    "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"
+    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    "https://images.unsplash.com/photo-1593642532973-d31b6557fa68?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    "https://images.unsplash.com/photo-1517816743773-6e0fd518b4a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"
   ];
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);

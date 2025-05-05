@@ -1,89 +1,155 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import Hero from '../components/Hero';
+import FeaturedServices from '../components/FeaturedServices';
+import HowItWorks from '../components/HowItWorks';
+import ProviderCard from '../components/ProviderCard';
+import Footer from '../components/Footer';
 import { Button } from '../components/ui/button';
-import { Search, Star, Shield, Clock } from 'lucide-react';
+import { CheckCircle, Star, Calendar } from 'lucide-react';
 
 const Home = () => {
+  // Sample data for featured providers
+  const featuredProviders = [
+    {
+      name: "Family First Plumbing",
+      image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80", 
+      rating: 4.8,
+      reviewCount: 127,
+      location: "New York, NY",
+      verified: true,
+      badges: ["Licensed", "Insured", "Family-Friendly"],
+      services: ["Family Plumbing Repair", "Water Heater Installation", "Child-Safe Fixtures"]
+    },
+    {
+      name: "Safe Home Electrical",
+      image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
+      rating: 4.9,
+      reviewCount: 94,
+      location: "New York, NY",
+      verified: true,
+      badges: ["Licensed", "Insured", "Background Checked"],
+      services: ["Child-Safe Electrical", "Lighting Installation", "Safety Inspections"]
+    },
+    {
+      name: "Family Spaces Painting",
+      image: "https://images.unsplash.com/photo-1562259929-b4e1fd3aef09?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
+      rating: 4.7,
+      reviewCount: 89,
+      location: "Brooklyn, NY",
+      verified: true,
+      badges: ["Insured", "Non-Toxic Paints", "Family-Approved"],
+      services: ["Interior Painting", "Nursery Painting", "Child-Safe Materials"]
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <section className="relative py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Find Trusted Home Service Professionals
-            </h1>
-            <p className="text-xl text-gray-600 mb-8">
-              Connect with verified professionals for all your home service needs
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-                <Search className="h-5 w-5 mr-2" />
-                Find a Pro
+    <div className="min-h-screen flex flex-col">
+      
+      <main>
+        <Hero />
+        
+        <FeaturedServices />
+        
+        <HowItWorks />
+        
+        {/* Featured Professionals */}
+        <section id="professionals" className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold mb-4">Family-Approved Professionals</h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                Discover highly rated and background-checked service providers with a focus on family safety and satisfaction.
+              </p>
+            </div>
+            
+            <div className="space-y-6 max-w-4xl mx-auto">
+              {featuredProviders.map((provider, index) => (
+                <ProviderCard
+                  key={index}
+                  {...provider}
+                />
+              ))}
+            </div>
+            
+            <div className="text-center mt-10">
+              <Button size="lg" asChild>
+                <Link to="/professionals">View All Family-Friendly Pros</Link>
               </Button>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Search Section */}
-      <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Search className="h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="What service do you need?"
-                className="flex-1 p-2 border-0 focus:outline-none"
-                id="service-search"
-              />
-            </div>
-            <Button className="w-full">Search</Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Star className="h-8 w-8 text-blue-600" />
+        </section>
+        
+        {/* Trust Indicators */}
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-3xl font-bold mb-10">Why Families Choose Aweni</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+              <div>
+                <div className="bg-white p-6 rounded-lg shadow-sm h-full">
+                  <div className="rounded-full bg-blue-100 w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-3">Family Safety First</h3>
+                  <p className="text-gray-600">All providers undergo thorough background checks and licensing verification for your family's safety.</p>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Verified Professionals</h3>
-              <p className="text-gray-600">All providers are background-checked and verified</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="h-8 w-8 text-green-600" />
+              
+              <div>
+                <div className="bg-white p-6 rounded-lg shadow-sm h-full">
+                  <div className="rounded-full bg-green-100 w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <Star className="h-8 w-8 text-green-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-3">Parent-Verified Reviews</h3>
+                  <p className="text-gray-600">Reviews from families like yours help you select professionals who understand children and family needs.</p>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Secure Payments</h3>
-              <p className="text-gray-600">Safe and secure payment processing</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Clock className="h-8 w-8 text-purple-600" />
+              
+              <div>
+                <div className="bg-white p-6 rounded-lg shadow-sm h-full">
+                  <div className="rounded-full bg-purple-100 w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <Calendar className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-3">Family-Friendly Scheduling</h3>
+                  <p className="text-gray-600">Book appointments that fit your busy family life with our convenient scheduling system.</p>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Quick Response</h3>
-              <p className="text-gray-600">Get connected with professionals in minutes</p>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 bg-blue-600 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
-          <p className="text-xl mb-8">Join thousands of satisfied customers</p>
-          <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
-            Find a Professional
-          </Button>
-        </div>
-      </section>
+        </section>
+        
+        {/* Family CTA Section with Image */}
+        <section className="relative">
+          <div className="absolute inset-0 z-0">
+            <img 
+              src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" 
+              alt="Happy family at home" 
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-blue-600/80"></div>
+          </div>
+          
+          <div className="container relative z-10 mx-auto px-4 py-20 text-center text-white">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Transform Your Family Home?</h2>
+            <p className="text-xl mb-8 max-w-2xl mx-auto">
+              Find trusted professionals who understand the needs of your family. Get started today!
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100" asChild>
+                <Link to="/professionals">Find a Family-Friendly Pro</Link>
+              </Button>
+              <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10">
+                Join as a Professional
+              </Button>
+            </div>
+          </div>
+        </section>
+      </main>
+      
+      <Footer />
     </div>
   );
 };
 
-export default Home; 
+export default Home;
